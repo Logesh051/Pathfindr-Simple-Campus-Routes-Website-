@@ -1,67 +1,77 @@
 import React, { useState } from "react";
 import Lottie from "lottie-react";
-import portalAnim from "./assets/portal.json"; // Add a glowing portal Lottie animation in /src/assets/
+import portalAnim from "./assets/portal.json";
 
 const LOCATIONS = [
-  "Main Entrance",
-  "Library",
-  "Cafeteria",
-  "Room 101",
-  "Room 102",
-  "Room 201",
-  "Auditorium",
+  "1412",
+  "1451",
+  "1481",
+  "1512",
+  "1562",
+  "1581",
+  "1651",
+  "1683",
+  "1731",
+  "1851",
+  "1873",
 ];
-
-const PATHS = {
-  "0_3": "/images/path_0_3.png",
-  "0_4": "/images/path_0_4.png",
-  "1_3": "/images/path_1_3.png",
-  "2_3": "/images/path_2_3.png",
-  "3_4": "/images/path_3_4.png",
-  "3_5": "/images/path_3_5.png",
-  "0_6": "/images/path_0_6.png",
-};
 
 export default function PathFinderUI() {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
-  const [pathSrc, setPathSrc] = useState(null);
+  const [pathSrc, setPathSrc] = useState("/image/campus_base_map.png");
   const [message, setMessage] = useState("");
   const [portalActive, setPortalActive] = useState(false);
 
   const handleFindPath = () => {
     setMessage("");
-    if (from === "" || to === "") {
-      setMessage("Please select both start and destination.");
-      setPathSrc(null);
+    if (!from || !to) {
+      setMessage("⚠️ Please select both start and destination rooms.");
       return;
     }
     if (from === to) {
-      setMessage("You’re already there!");
-      setPathSrc(null);
+      setMessage("📍 You’re already in that room!");
       return;
     }
 
-    const key1 = `${from}_${to}`;
-    const key2 = `${to}_${from}`;
-    const src = PATHS[key1] || PATHS[key2];
+    // Try both filename directions (e.g., "1412-1451" or "1451-1412")
+    const possiblePaths = [
+      `/image/${from}-${to}.png`,
+      `/image/${to}-${from}.png`,
+    ];
 
-    if (src) {
+    const img = new Image();
+    img.src = possiblePaths[0];
+
+    img.onload = () => {
       setPortalActive(true);
       setTimeout(() => {
-        setPathSrc(src);
+        setPathSrc(possiblePaths[0]);
         setPortalActive(false);
-      }, 3000); // duration of portal animation
-    } else {
-      setPathSrc(null);
-      setMessage("Sorry, path image not available for this route.");
-    }
+      }, 2000);
+    };
+    img.onerror = () => {
+      // Try reverse
+      const reverseImg = new Image();
+      reverseImg.src = possiblePaths[1];
+      reverseImg.onload = () => {
+        setPortalActive(true);
+        setTimeout(() => {
+          setPathSrc(possiblePaths[1]);
+          setPortalActive(false);
+        }, 2000);
+      };
+      reverseImg.onerror = () => {
+        setMessage("❌ No path image available for this route.");
+        setPathSrc("/image/campus_base_map.png");
+      };
+    };
   };
 
   const reset = () => {
     setFrom("");
     setTo("");
-    setPathSrc(null);
+    setPathSrc("/image/campus_base_map.png");
     setMessage("");
   };
 
@@ -69,41 +79,50 @@ export default function PathFinderUI() {
     <div style={styles.page}>
       <div style={styles.backgroundOverlay}></div>
       <div style={styles.container}>
-        <h1 style={styles.title}>🌀 Pathfindr – Journey Portal</h1>
+        <h1 style={styles.title}>🌀 Pathfindr — Campus Room Navigator</h1>
 
         <div style={styles.controls}>
+          {/* Start Room */}
           <div style={styles.dropdownWrap}>
-            <label style={styles.label}>Start Location</label>
-            <select
-              value={from}
-              onChange={(e) => setFrom(e.target.value)}
-              style={styles.select}
-            >
-              <option value="">-- choose start --</option>
-              {LOCATIONS.map((loc, idx) => (
-                <option key={idx} value={idx}>
-                  {loc}
-                </option>
-              ))}
-            </select>
+            <label style={styles.label}>Start Room</label>
+            <div style={styles.dropdownBox}>
+              <select
+                value={from}
+                onChange={(e) => setFrom(e.target.value)}
+                style={styles.select}
+              >
+                <option value="">-- choose start room --</option>
+                {LOCATIONS.map((loc) => (
+                  <option key={loc} value={loc}>
+                    {loc}
+                  </option>
+                ))}
+              </select>
+              <span style={styles.icon}>🚩</span>
+            </div>
           </div>
 
+          {/* Destination Room */}
           <div style={styles.dropdownWrap}>
-            <label style={styles.label}>Destination</label>
-            <select
-              value={to}
-              onChange={(e) => setTo(e.target.value)}
-              style={styles.select}
-            >
-              <option value="">-- choose destination --</option>
-              {LOCATIONS.map((loc, idx) => (
-                <option key={idx} value={idx}>
-                  {loc}
-                </option>
-              ))}
-            </select>
+            <label style={styles.label}>Destination Room</label>
+            <div style={styles.dropdownBox}>
+              <select
+                value={to}
+                onChange={(e) => setTo(e.target.value)}
+                style={styles.select}
+              >
+                <option value="">-- choose destination room --</option>
+                {LOCATIONS.map((loc) => (
+                  <option key={loc} value={loc}>
+                    {loc}
+                  </option>
+                ))}
+              </select>
+              <span style={styles.icon}>🎯</span>
+            </div>
           </div>
 
+          {/* Buttons */}
           <div style={styles.buttons}>
             <button style={styles.button} onClick={handleFindPath}>
               🚀 Start Journey
@@ -116,25 +135,22 @@ export default function PathFinderUI() {
 
         {message && <div style={styles.message}>{message}</div>}
 
-        <div
-          style={{
-            ...styles.mapContainer,
-            transform: portalActive ? "scale(1.3)" : "scale(1)",
-            transition: "transform 2.5s ease-in-out",
-          }}
-        >
+        {/* Map / Portal Animation */}
+        <div style={styles.mapContainer}>
           {portalActive && (
             <div style={styles.portalAnim}>
               <Lottie animationData={portalAnim} loop={false} />
             </div>
           )}
           <img
-            src={pathSrc || "/images/campus_base_map.png"}
-            alt="Campus Map"
+            src={pathSrc}
+            alt="Campus Path"
             style={{
               ...styles.mapImage,
-              opacity: pathSrc ? 1 : 0.9,
+              opacity: portalActive ? 0.5 : 1,
+              transition: "opacity 1s ease",
             }}
+            onError={() => setMessage("⚠️ Could not load image.")}
           />
         </div>
       </div>
@@ -142,6 +158,7 @@ export default function PathFinderUI() {
   );
 }
 
+/* ✨ Magical Theme Styling */
 const styles = {
   page: {
     minHeight: "100vh",
@@ -193,18 +210,30 @@ const styles = {
   },
   dropdownWrap: { display: "flex", flexDirection: "column" },
   label: { marginBottom: 8, fontSize: 16, fontWeight: 600 },
+  dropdownBox: {
+    position: "relative",
+    display: "flex",
+    alignItems: "center",
+  },
+  icon: {
+    position: "absolute",
+    right: 14,
+    pointerEvents: "none",
+    fontSize: 18,
+  },
   select: {
-    padding: 12,
+    padding: "12px 40px 12px 16px",
     minWidth: 220,
     borderRadius: 10,
     border: "1px solid rgba(255,255,255,0.5)",
-    background: "rgba(255,255,255,0.9)",
+    background: "linear-gradient(90deg, #e0f7ff, #f0faff)",
     color: "#111",
     fontWeight: 600,
     fontSize: 15,
     cursor: "pointer",
     outline: "none",
-    transition: "all 0.3s ease",
+    transition: "all 0.4s ease",
+    boxShadow: "0 3px 10px rgba(0,255,255,0.2)",
   },
   buttons: { display: "flex", gap: 12 },
   button: {
@@ -253,6 +282,8 @@ const styles = {
     maxWidth: "100%",
     maxHeight: 640,
     borderRadius: 12,
+    boxShadow: "0 0 30px rgba(0,255,255,0.3)",
+    transition: "all 1.2s ease",
   },
   portalAnim: {
     position: "absolute",
