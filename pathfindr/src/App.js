@@ -1,141 +1,126 @@
 import React, { useState } from "react";
-
-const LOCATIONS = [
-  "Main Entrance",
-  "Library",
-  "Cafeteria",
-  "Room 101",
-  "Room 102",
-  "Room 201",
-  "Auditorium",
-];
-
-const makeKey = (fromIndex, toIndex) => `${fromIndex}_${toIndex}`;
-
-const PATHS = {
-  [makeKey(0, 3)]: "/image/path_0_3.png",
-  [makeKey(0, 4)]: "/image/path_0_4.png",
-  [makeKey(1, 3)]: "/image/path_1_3.png",
-  [makeKey(2, 3)]: "/image/path_2_3.png",
-  [makeKey(3, 4)]: "/image/path_3_4.png",
-  [makeKey(3, 5)]: "/image/path_3_5.png",
-  [makeKey(0, 6)]: "/image/path_0_6.png",
-};
+import Lottie from "lottie-react";
+import explorerAnim from "./assets/explorer.json";
+import PathFinderUI from "./PathFinderUI";
 
 export default function App() {
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
-  const [pathSrc, setPathSrc] = useState(null);
-  const [message, setMessage] = useState("");
+  const [started, setStarted] = useState(false);
 
-  const handleFindPath = () => {
-    setMessage("");
-    if (from === "" || to === "") {
-      setPathSrc(null);
-      setMessage("Please select both start and destination.");
-      return;
-    }
-    if (from === to) {
-      setPathSrc(null);
-      setMessage("You're already there — pick a different destination.");
-      return;
-    }
-    const key = makeKey(Number(from), Number(to));
-    const src = PATHS[key];
-    if (src) {
-      setPathSrc(src);
-      setMessage("");
-    } else {
-      setPathSrc(null);
-      setMessage("Sorry — no pre-drawn path for that route yet.");
-    }
-  };
+  if (!started) {
+    return (
+      <div style={introStyles.page}>
+        <div style={introStyles.glowBg}></div>
 
-  const reset = () => {
-    setFrom("");
-    setTo("");
-    setPathSrc(null);
-    setMessage("");
-  };
-
-  return (
-    <div style={styles.container}>
-      <h1 style={styles.title}>Pathfindr — Simple Campus Routes</h1>
-
-      <div style={styles.controls}>
-        <div style={styles.dropdownWrap}>
-          <label style={styles.label}>Where are you starting?</label>
-          <select
-            value={from}
-            onChange={(e) => setFrom(e.target.value)}
-            style={styles.select}
-          >
-            <option value="">-- choose start --</option>
-            {LOCATIONS.map((loc, idx) => (
-              <option key={idx} value={idx}>
-                {loc}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div style={styles.dropdownWrap}>
-          <label style={styles.label}>Where do you want to go?</label>
-          <select
-            value={to}
-            onChange={(e) => setTo(e.target.value)}
-            style={styles.select}
-          >
-            <option value="">-- choose destination --</option>
-            {LOCATIONS.map((loc, idx) => (
-              <option key={idx} value={idx}>
-                {loc}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div style={styles.buttons}>
-          <button style={styles.button} onClick={handleFindPath}>
-            Find Your Path
-          </button>
-          <button style={styles.resetButton} onClick={reset}>
-            Reset
-          </button>
-        </div>
-      </div>
-
-      {message && <div style={styles.message}>{message}</div>}
-
-      <div style={styles.mapContainer}>
-        <img
-          src={pathSrc || "/image/campus_base_map.png"}
-          alt="Campus Map"
-          style={styles.mapImage}
-          onError={() =>
-            setMessage(
-              "Failed to load image. Check the folder name and file names in /public/image/"
-            )
-          }
+        <Lottie
+          animationData={explorerAnim}
+          loop
+          style={introStyles.lottie}
         />
-      </div>
 
-    </div>
-  );
+        <h1 style={introStyles.title}>Embark on Your Campus Adventure</h1>
+        <p style={introStyles.subtitle}>
+          Ready to explore? Let’s help you find your way through campus!
+        </p>
+
+        <button
+          style={introStyles.startButton}
+          onClick={() => setStarted(true)}
+          onMouseEnter={(e) => (e.target.style.transform = "scale(1.08)")}
+          onMouseLeave={(e) => (e.target.style.transform = "scale(1)")}
+        >
+          🚀 Start Exploring
+        </button>
+      </div>
+    );
+  }
+
+  return <PathFinderUI />;
 }
 
-const styles = {
-  container: { maxWidth: 920, margin: "18px auto", padding: 16, fontFamily: "Segoe UI, Roboto, Arial, sans-serif" },
-  title: { textAlign: "center", marginBottom: 12 },
-  controls: { display: "flex", gap: 12, alignItems: "flex-end", flexWrap: "wrap", justifyContent: "center", marginBottom: 12 },
-  dropdownWrap: { display: "flex", flexDirection: "column" },
-  label: { marginBottom: 6, fontSize: 14 },
-  select: { padding: 8, minWidth: 180, borderRadius: 6, border: "1px solid #ccc" },
-  buttons: { display: "flex", gap: 8, alignItems: "center" },
-  button: { padding: "8px 14px", borderRadius: 8, border: "none", cursor: "pointer", background: "#2563eb", color: "white" },
-  resetButton: { padding: "8px 12px", borderRadius: 8, border: "1px solid #bbb", cursor: "pointer", background: "white" },
-  mapContainer: { border: "1px solid #ddd", borderRadius: 8, padding: 8, marginTop: 12, minHeight: 420, display: "flex", alignItems: "center", justifyContent: "center", background: "#fafafa" },
-  mapImage: { maxWidth: "100%", maxHeight: 640, borderRadius: 6 },
-  message: { color: "#b91c1c", marginTop: 8, textAlign: "center" },
-  note: { marginTop: 10, color: "#374151", fontSize: 13 },
+const introStyles = {
+  page: {
+    minHeight: "100vh",
+    background: "linear-gradient(135deg, #0f0c29, #302b63, #24243e)",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    color: "white",
+    fontFamily: "'Poppins', sans-serif",
+    position: "relative",
+    overflow: "hidden",
+    textAlign: "center",
+  },
+  glowBg: {
+    position: "absolute",
+    width: "200%",
+    height: "200%",
+    background:
+      "radial-gradient(circle at 25% 25%, rgba(0,255,255,0.25), transparent 60%), radial-gradient(circle at 75% 75%, rgba(255,0,200,0.25), transparent 60%)",
+    filter: "blur(140px)",
+    animation: "moveGlow 10s infinite alternate ease-in-out",
+    zIndex: 0,
+  },
+  lottie: {
+    width: 320,
+    height: 320,
+    marginBottom: 20,
+    zIndex: 1,
+    filter: "drop-shadow(0 0 12px rgba(0,255,255,0.4))",
+  },
+  title: {
+    fontSize: 34,
+    fontWeight: 700,
+    background: "linear-gradient(90deg, #00ffff, #ff00ff)",
+    WebkitBackgroundClip: "text",
+    WebkitTextFillColor: "transparent",
+    marginBottom: 12,
+    zIndex: 1,
+    textShadow: "0 0 12px rgba(0,255,255,0.4)",
+    animation: "fadeIn 2s ease-in-out",
+  },
+  subtitle: {
+    fontSize: 18,
+    color: "#d1eaff",
+    marginBottom: 28,
+    opacity: 0.85,
+    zIndex: 1,
+  },
+  startButton: {
+    padding: "14px 32px",
+    borderRadius: 12,
+    border: "none",
+    background: "linear-gradient(90deg, #00ffff, #0072ff, #ff00ff)",
+    backgroundSize: "300% 100%",
+    color: "white",
+    fontWeight: "700",
+    letterSpacing: "0.8px",
+    cursor: "pointer",
+    fontSize: 18,
+    transition: "all 0.3s ease",
+    boxShadow: "0 0 25px rgba(0,255,255,0.4)",
+    animation: "gradientShift 6s ease infinite",
+    zIndex: 1,
+  },
 };
+
+// Inject animations into <head>
+const style = document.createElement("style");
+style.innerHTML = `
+@keyframes moveGlow {
+  0% { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(-10%, -10%) scale(1.2); }
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+`;
+document.head.appendChild(style);
